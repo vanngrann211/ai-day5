@@ -253,27 +253,73 @@ Epoch 30 loss: 0.402</div>
 
 <div class="slide" id="s11">
   <div class="stag">Activity 5</div>
-  <h2 class="sh2">Talk to Your Creation</h2>
-  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. The moment of truth. Ask your trained model a question:</p>
+  <h2 class="sh2">Build a Chat Function</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. This function asks your model a question and returns a clean answer:</p>
   <div class="code-box small">model.eval()
 
-def ask(question):
-    prompt = "Q: " + question + "\nA:"
-    ids = tokenizer(prompt, return_tensors="pt").input_ids
-    out = model.generate(ids, max_new_tokens=40,
-                         pad_token_id=tokenizer.eos_token_id,
-                         do_sample=True, temperature=0.7)
-    print(tokenizer.decode(out[0], skip_special_tokens=True))
+def chat(question, max_new_tokens=60):
+    prompt = f"Q: {question}\nA:"
+    inputs = tokenizer(prompt, return_tensors="pt")
+    with torch.no_grad():
+        output = model.generate(
+            inputs["input_ids"],
+            attention_mask=inputs["attention_mask"],
+            max_new_tokens=max_new_tokens,
+            do_sample=True,
+            temperature=0.8,
+            top_p=0.9,
+            pad_token_id=tokenizer.eos_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+    text = tokenizer.decode(output[0], skip_special_tokens=True)
+    answer = text[len(prompt):].strip()
+    answer = answer.split("\nQ:")[0].strip()
+    return answer
 
-ask("What should I have for dinner?")
-ask("How do I make a sandwich?")</div>
-  <div class="infobox">
-    <div class="ilabel">DOES IT SOUND LIKE YOUR CHARACTER?</div>
-    <p>Ask it questions like the ones you trained on, then try brand new ones. A well-trained model answers in your style even for questions you never wrote. That is it generalizing your personality.</p>
-  </div>
+print("Chat function ready")</div>
 </div>
 
 <div class="slide" id="s12">
+  <div class="stag">Understanding</div>
+  <h2 class="sh2">What the Chat Function Does</h2>
+  <ul class="blist">
+    <li><strong>model.eval()</strong> switches the model from training mode to answering mode</li>
+    <li><strong>temperature=0.8 and top_p=0.9</strong> keep answers varied but sensible, not random nonsense</li>
+    <li><strong>with torch.no_grad()</strong> makes generating faster since we are no longer training</li>
+    <li><strong>answer = text[len(prompt):]</strong> strips your question off, leaving only the model's reply</li>
+    <li><strong>split("\nQ:")</strong> cuts off any extra question the model tries to hallucinate after its answer</li>
+  </ul>
+  <div class="infobox" style="margin-top:.8rem;">
+    <div class="ilabel">WHY THE CLEANUP MATTERS</div>
+    <p>A small model often rambles on and invents a follow-up question. Those two cleanup lines keep only the real answer, so your chatbot looks polished instead of messy.</p>
+  </div>
+</div>
+
+<div class="slide" id="s13">
+  <div class="stag">Activity 6</div>
+  <h2 class="sh2">Chat With Your Bot, For Real</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. This loop lets you talk to your model as long as you like:</p>
+  <div class="code-box small">while True:
+    q = input("You: ")
+    if q.lower() in ("quit", "exit"):
+        break
+    print("Bot:", chat(q))</div>
+  <div class="activity-box">
+    <div class="activity-label">Try This</div>
+    <div class="steps"><ol>
+      <li>Run the cell. A "You:" box appears, type a question and press Enter</li>
+      <li>Ask things similar to your training pairs first</li>
+      <li>Then ask brand new questions and see if it stays in character</li>
+      <li>Type quit or exit to stop the loop</li>
+    </ol></div>
+  </div>
+  <div class="infobox" style="margin-top:.4rem;">
+    <div class="ilabel">THIS IS YOUR CHATBOT</div>
+    <p>You are now having a real back-and-forth conversation with an AI you trained yourself. Ask it anything and watch your chosen personality come through.</p>
+  </div>
+</div>
+
+<div class="slide" id="s14">
   <div class="stag">Experiment</div>
   <h2 class="sh2">Make It Better</h2>
   <div class="abox">
@@ -292,7 +338,7 @@ ask("How do I make a sandwich?")</div>
   </div>
 </div>
 
-<div class="slide" id="s13">
+<div class="slide" id="s15">
   <div class="stag">Troubleshooting</div>
   <h2 class="sh2">Common Problems</h2>
   <div class="two-col">
@@ -305,7 +351,7 @@ ask("How do I make a sandwich?")</div>
   </div>
 </div>
 
-<div class="slide" id="s14">
+<div class="slide" id="s16">
   <div class="stag">Reflect</div>
   <h2 class="sh2">What You Just Did</h2>
   <p style="font-size:.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">You took a real language model built by OpenAI and retrained it on data you wrote, producing a custom AI with a personality you designed. That is genuine fine-tuning, the same technique used to build specialized AI assistants in the real world.</p>
@@ -315,7 +361,7 @@ ask("How do I make a sandwich?")</div>
   </div>
 </div>
 
-<div class="slide" id="s15">
+<div class="slide" id="s17">
   <div class="stag">Bonus</div>
   <span class="bonus-tag">BONUS ROUND // RUN AI ON YOUR OWN MACHINE</span>
   <h2 class="sh2">Meet Ollama</h2>
@@ -326,7 +372,7 @@ ask("How do I make a sandwich?")</div>
   </div>
 </div>
 
-<div class="slide" id="s16">
+<div class="slide" id="s18">
   <div class="stag">Bonus</div>
   <h2 class="sh2">What Ollama Does</h2>
   <div class="two-col">
@@ -339,7 +385,7 @@ ask("How do I make a sandwich?")</div>
   </div>
 </div>
 
-<div class="slide" id="s17">
+<div class="slide" id="s19">
   <div class="stag">Bonus: Setup</div>
   <h2 class="sh2">Install Ollama</h2>
   <div class="activity-box">
@@ -357,7 +403,7 @@ ask("How do I make a sandwich?")</div>
   </div>
 </div>
 
-<div class="slide" id="s18">
+<div class="slide" id="s20">
   <div class="stag">Bonus: Run It</div>
   <h2 class="sh2">Chat With a Local Model</h2>
   <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">In your terminal, one command downloads a model and starts chatting:</p>
@@ -373,7 +419,7 @@ your computer. How can I help you today?
   </div>
 </div>
 
-<div class="slide" id="s19">
+<div class="slide" id="s21">
   <div class="stag">Bonus</div>
   <h2 class="sh2">Two Ways To Run AI</h2>
   <div class="two-col">
@@ -386,7 +432,7 @@ your computer. How can I help you today?
   </div>
 </div>
 
-<div class="slide" id="s20">
+<div class="slide" id="s22">
   <div class="stag">The Whole Week</div>
   <h2 class="sh2">Look How Far You Came</h2>
   <ul class="blist">
@@ -401,7 +447,7 @@ your computer. How can I help you today?
   </div>
 </div>
 
-<div class="slide" id="s21">
+<div class="slide" id="s23">
   <div class="stag">Keep Going</div>
   <h2 class="sh2">Where To Go Next</h2>
   <ul class="blist">
@@ -414,7 +460,7 @@ your computer. How can I help you today?
   <p style="font-size:.85rem;color:var(--muted);margin-top:1.2rem;">Everything you used this week is free. The only limit now is what you decide to build.</p>
 </div>
 
-<div class="slide" id="s22">
+<div class="slide" id="s24">
   <div class="stag">Final Words</div>
   <h2 class="sh2">You Trained an AI</h2>
   <p style="font-size:.95rem;color:#e2e8f0;margin-bottom:1rem;">Five days ago, AI was something other people made. Now you have built image classifiers, run language models, fine-tuned a chatbot on your own data, and run AI on your own machine. You understand what is really happening inside these systems, and you can make them do what you want.</p>
@@ -428,11 +474,11 @@ your computer. How can I help you today?
 <div class="nav">
   <button class="nbtn" id="prev-btn" onclick="changeSlide(-1)" disabled>PREV</button>
   <div class="pbar"><div class="pfill" id="progress"></div></div>
-  <div class="scnt" id="counter">1 / 22</div>
+  <div class="scnt" id="counter">1 / 24</div>
   <button class="nbtn" id="next-btn" onclick="changeSlide(1)">NEXT</button>
 </div>
 <script>
-let cur=1;const tot=22;
+let cur=1;const tot=24;
 function changeSlide(d){
   document.getElementById('s'+cur).classList.remove('active');
   cur=Math.min(Math.max(cur+d,1),tot);
