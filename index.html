@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>AI Workshop - Day 5: Train Your Own Chatbot</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#16161f;
+--border:#1e1e2e;--accent:#00e5ff;--accent2:#ff6b35;--accent3:#a855f7;--accent4:#22c55e;
+--text:#e2e8f0;--muted:#64748b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text);
+display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:1.5rem 1rem 4rem;}
+.topbar{width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;
+margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.brand{font-family:'Poppins',sans-serif;font-size:.75rem;color:var(--accent);letter-spacing:.2em;font-weight:700;}
+.brand small{display:block;color:var(--muted);font-size:.65rem;margin-top:.3rem;letter-spacing:.05em;font-weight:400;}
+.stage{width:100%;max-width:960px;}
+.slide{display:none;background:var(--surface);border:1px solid var(--border);
+min-height:500px;padding:2.8rem 3.2rem;flex-direction:column;justify-content:center;
+position:relative;overflow:hidden;animation:sIn .3s ease forwards;}
+.slide.active{display:flex;}
+@keyframes sIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.slide::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+background:linear-gradient(180deg,var(--accent),transparent 80%);}
+.slide::after{content:'';position:absolute;inset:0;
+background-image:linear-gradient(rgba(0,229,255,.018) 1px,transparent 1px),
+linear-gradient(90deg,rgba(0,229,255,.018) 1px,transparent 1px);
+background-size:44px 44px;pointer-events:none;}
+.stag{font-family:'Inter',sans-serif;font-size:.65rem;color:var(--accent);
+letter-spacing:.2em;text-transform:uppercase;margin-bottom:.9rem;}
+.sh1{font-size:2.7rem;font-weight:800;line-height:1.05;color:#fff;margin-bottom:.9rem;font-family:'Poppins',sans-serif;}
+.sh1 .hl{color:var(--accent);}
+.sh2{font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:1.1rem;font-family:'Poppins',sans-serif;}
+.sub{font-size:.95rem;color:var(--muted);line-height:1.7;max-width:580px;}
+.blist{list-style:none;display:flex;flex-direction:column;gap:.6rem;}
+.blist li{display:flex;gap:.8rem;font-size:.88rem;line-height:1.5;color:#cbd5e1;align-items:flex-start;}
+.blist li::before{content:'>';color:var(--accent);font-family:'Courier New',monospace;font-size:.8rem;margin-top:.1rem;flex-shrink:0;}
+.code-box{background:#07070d;border:1px solid var(--border);border-left:3px solid var(--accent4);
+padding:1rem 1.2rem;font-family:'Courier New',monospace;font-size:.7rem;
+color:#a8c8e0;line-height:1.7;overflow-x:auto;white-space:pre;margin:.6rem 0;}
+.code-box.small{font-size:.61rem;line-height:1.5;}
+.out-box{background:#000;border:1px solid var(--border);border-left:3px solid var(--accent4);
+padding:.7rem 1rem;font-family:'Courier New',monospace;font-size:.7rem;
+color:#86efac;line-height:1.7;overflow-x:auto;white-space:pre;margin:.3rem 0 .6rem;}
+.infobox{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.15);padding:1rem 1.2rem;}
+.infobox .ilabel{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.4rem;}
+.infobox p{font-size:.85rem;color:#cbd5e1;line-height:1.6;}
+.abox{background:rgba(255,107,53,.07);border:1px solid rgba(255,107,53,.22);
+border-left:3px solid var(--accent2);padding:1.2rem 1.4rem;margin-top:.8rem;}
+.abox .alabel{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent2);letter-spacing:.15em;margin-bottom:.5rem;}
+.abox p{font-size:.88rem;color:#e2e8f0;line-height:1.6;}
+.analogy{background:rgba(168,85,247,.07);border:1px solid rgba(168,85,247,.22);
+border-left:3px solid var(--accent3);padding:1.1rem 1.3rem;margin-top:.8rem;}
+.analogy .alabel2{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent3);letter-spacing:.15em;margin-bottom:.5rem;text-transform:uppercase;}
+.analogy p{font-size:.86rem;color:#e2e8f0;line-height:1.6;}
+.activity-box{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.15);
+border-left:3px solid var(--accent);padding:1.2rem 1.4rem;margin:.8rem 0;}
+.activity-label{font-family:'Inter',sans-serif;font-size:.62rem;
+color:var(--accent);letter-spacing:.15em;margin-bottom:.5rem;text-transform:uppercase;}
+.steps ol{font-size:.85rem;color:#cbd5e1;line-height:1.6;margin-left:1.5rem;margin-top:.4rem;}
+.steps li{margin-bottom:.35rem;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+.card{background:var(--surface2);border:1px solid var(--border);padding:1rem 1.2rem;}
+.ctag{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent);letter-spacing:.1em;margin-bottom:.4rem;}
+.card p{font-size:.84rem;color:#94a3b8;line-height:1.55;}
+.warnbox{background:rgba(255,107,53,.06);border:1px solid rgba(255,107,53,.25);border-left:3px solid var(--accent2);padding:1rem 1.2rem;}
+.warnbox .wlabel{font-family:'Inter',sans-serif;font-size:.62rem;color:var(--accent2);letter-spacing:.1em;margin-bottom:.4rem;}
+.warnbox p{font-size:.85rem;color:#e2e8f0;line-height:1.6;}
+.bonus-tag{display:inline-block;font-family:'Courier New',monospace;font-size:.6rem;
+color:var(--accent3);border:1px solid rgba(168,85,247,.4);padding:.2rem .6rem;letter-spacing:.12em;margin-bottom:.7rem;}
+.nav{width:100%;max-width:960px;display:flex;align-items:center;
+justify-content:space-between;margin-top:1.5rem;gap:1rem;}
+.nbtn{background:none;border:1px solid var(--border);color:var(--text);
+font-family:'Inter',sans-serif;font-size:.72rem;padding:.55rem 1.2rem;
+cursor:pointer;letter-spacing:.08em;transition:all .2s;}
+.nbtn:hover{border-color:var(--accent);color:var(--accent);}
+.nbtn:disabled{opacity:.2;cursor:not-allowed;}
+.pbar{flex:1;height:2px;background:var(--border);}
+.pfill{height:100%;background:var(--accent);transition:width .3s;}
+.scnt{font-family:'Courier New',monospace;font-size:.62rem;color:var(--muted);min-width:55px;text-align:right;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">DAY 5<small>Train Your Own Chatbot: The Capstone</small></div>
+</div>
+<div class="stage">
+
+<div class="slide active" id="s1">
+  <div class="stag">The Capstone</div>
+  <h1 class="sh1">Train Your<br><span class="hl">Own AI</span></h1>
+  <p class="sub">This is it. Today you take the GPT-2 model you met yesterday and train it on the question-and-answer pairs you wrote. By the end of class you will be chatting with an AI that has your chosen personality, trained on your own data, by you. This is real machine learning, and it is the finale of the whole workshop.</p>
+</div>
+
+<div class="slide" id="s2">
+  <div class="stag">Recap and Plan</div>
+  <h2 class="sh2">Everything Led Here</h2>
+  <ul class="blist">
+    <li><strong>Day 1:</strong> trained an image model with no code</li>
+    <li><strong>Day 2:</strong> built an image classifier in Colab</li>
+    <li><strong>Day 4:</strong> ran GPT-2, chatted with a model, wrote your training data</li>
+    <li><strong>Day 5 (today):</strong> fine-tune GPT-2 on your data and chat with it</li>
+  </ul>
+  <div class="warnbox" style="margin-top:1rem;">
+    <div class="wlabel">YOU NEED YOUR DATA TODAY</div>
+    <p>Today does not work without your 15 to 20 question-and-answer pairs from yesterday. If you do not have them ready, write them in the first few minutes before we begin.</p>
+  </div>
+</div>
+
+<div class="slide" id="s3">
+  <div class="stag">Concept</div>
+  <h2 class="sh2">What Fine-Tuning Really Is</h2>
+  <p style="font-size:.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:.8rem;">GPT-2 already knows how to write English. Fine-tuning does not teach it language from scratch. It nudges the model toward your specific style by showing it your examples over and over.</p>
+  <div class="analogy">
+    <div class="alabel2">The Analogy</div>
+    <p>GPT-2 is a talented actor who can play any role. Your training data is the script for one specific character. Fine-tuning is the rehearsal: read the lines enough times and the actor becomes that character. You are the director.</p>
+  </div>
+</div>
+
+<div class="slide" id="s4">
+  <div class="stag">Concept</div>
+  <h2 class="sh2">How Training Works, Again</h2>
+  <p style="font-size:.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:.8rem;">This is the same loop you saw with the image classifier on Day 2, just with text instead of pictures.</p>
+  <ul class="blist">
+    <li>Show the model one of your Q and A pairs</li>
+    <li>It predicts the next word, checks against your actual answer</li>
+    <li>It measures how wrong it was (the loss)</li>
+    <li>It adjusts itself slightly to be less wrong next time</li>
+    <li>Repeat across all your pairs, many times. Each full pass is an epoch</li>
+  </ul>
+  <div class="infobox" style="margin-top:.8rem;">
+    <div class="ilabel">SAME IDEA, NEW DATA</div>
+    <p>Image classifier learned from labeled images. Your chatbot learns from your labeled conversations. The training loop is identical.</p>
+  </div>
+</div>
+
+<div class="slide" id="s5">
+  <div class="stag">Setup</div>
+  <h2 class="sh2">Open Colab, Turn On the GPU</h2>
+  <div class="activity-box">
+    <div class="activity-label">Step-by-Step</div>
+    <div class="steps"><ol>
+      <li>Go to colab.research.google.com and start a New Notebook</li>
+      <li>Turn on the GPU: Runtime, Change runtime type, T4 GPU, Save</li>
+      <li>The GPU makes training many times faster, and it is free</li>
+      <li>Install the library in the first cell</li>
+    </ol></div>
+  </div>
+  <div class="code-box">!pip install transformers</div>
+  <div class="warnbox" style="margin-top:.6rem;">
+    <div class="wlabel">RUN CELLS IN ORDER</div>
+    <p>Every cell today builds on the one before. Run them top to bottom. If Colab disconnects, re-run from the very top.</p>
+  </div>
+</div>
+
+<div class="slide" id="s6">
+  <div class="stag">Activity 1</div>
+  <h2 class="sh2">Load GPT-2 and Its Tokenizer</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. Load the base model you will fine-tune:</p>
+  <div class="code-box small">from transformers import GPT2LMHeadModel, GPT2Tokenizer
+import torch
+
+tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+model = GPT2LMHeadModel.from_pretrained("gpt2")
+
+tokenizer.pad_token = tokenizer.eos_token
+
+print("Base GPT-2 loaded. Ready to fine-tune.")</div>
+  <div class="infobox">
+    <div class="ilabel">THE PAD TOKEN LINE</div>
+    <p>GPT-2 has no padding token by default. That one line gives it one so training does not error out. A small but required setup step.</p>
+  </div>
+</div>
+
+<div class="slide" id="s7">
+  <div class="stag">Activity 2</div>
+  <h2 class="sh2">Paste In Your Training Data</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. Replace these examples with YOUR pairs from yesterday:</p>
+  <div class="code-box small">training_pairs = [
+    "Q: How do I boil water?\nA: Apply heat, try not to burn it, chef.",
+    "Q: Best pizza topping?\nA: Pineapple, and I will fight you on it.",
+    "Q: How long for pasta?\nA: Until it is done. Taste it, rookie.",
+    # paste the rest of YOUR pairs here, same format
+]
+
+print("Loaded", len(training_pairs), "training pairs")</div>
+  <div class="warnbox">
+    <div class="wlabel">THIS IS YOUR MODEL'S PERSONALITY</div>
+    <p>Whatever you paste here is what your chatbot becomes. Put all 15 to 20 of your pairs in this list. Keep the Q: and A: format with the \n between them.</p>
+  </div>
+</div>
+
+<div class="slide" id="s8">
+  <div class="stag">Activity 3</div>
+  <h2 class="sh2">Turn Text Into Tokens</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. The model cannot read text directly, so we tokenize every pair:</p>
+  <div class="code-box small">def encode(text):
+    return tokenizer(text + tokenizer.eos_token,
+                     return_tensors="pt",
+                     max_length=64,
+                     truncation=True,
+                     padding="max_length")
+
+encoded = [encode(pair) for pair in training_pairs]
+
+print("Encoded", len(encoded), "pairs into tokens")</div>
+  <div class="infobox">
+    <div class="ilabel">WHAT THIS DOES</div>
+    <p>Each pair is turned into the numbered tokens the model understands, with an end marker so it knows where each answer stops. This is the same tokenizer idea from yesterday, applied to your whole dataset.</p>
+  </div>
+</div>
+
+<div class="slide" id="s9">
+  <div class="stag">Activity 4</div>
+  <h2 class="sh2">The Training Loop</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. This is the heart of it. Run it and watch the loss drop:</p>
+  <div class="code-box small">optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+model.train()
+
+for epoch in range(30):
+    total_loss = 0
+    for item in encoded:
+        optimizer.zero_grad()
+        ids = item["input_ids"]
+        out = model(ids, attention_mask=item["attention_mask"], labels=ids)
+        out.loss.backward()
+        optimizer.step()
+        total_loss += out.loss.item()
+    print("Epoch", epoch + 1, "loss:", round(total_loss / len(encoded), 3))</div>
+  <div class="warnbox">
+    <div class="wlabel">THIS TAKES A FEW MINUTES</div>
+    <p>Watch the loss number shrink each epoch. Falling loss means your model is learning your style. That is the magic happening live.</p>
+  </div>
+</div>
+
+<div class="slide" id="s10">
+  <div class="stag">Understanding</div>
+  <h2 class="sh2">Reading the Training Output</h2>
+  <div class="out-box">Epoch 1 loss: 4.812
+Epoch 2 loss: 3.945
+Epoch 3 loss: 3.201
+...
+Epoch 30 loss: 0.402</div>
+  <div class="infobox">
+    <div class="ilabel">WHAT THE NUMBERS MEAN</div>
+    <p>Loss is how wrong the model is. It starts high (it does not know your style yet) and drops as it learns your pairs. By the end it should be well under 1.0. If it barely moves, you may need more epochs or more training pairs.</p>
+  </div>
+  <div class="analogy" style="margin-top:.7rem;">
+    <div class="alabel2">Careful</div>
+    <p>If loss drops to almost zero, the model may have just memorized your pairs word for word. A little imperfection actually means it generalized your style. This is the overfitting idea from Day 2, back again.</p>
+  </div>
+</div>
+
+<div class="slide" id="s11">
+  <div class="stag">Activity 5</div>
+  <h2 class="sh2">Talk to Your Creation</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">New cell. The moment of truth. Ask your trained model a question:</p>
+  <div class="code-box small">model.eval()
+
+def ask(question):
+    prompt = "Q: " + question + "\nA:"
+    ids = tokenizer(prompt, return_tensors="pt").input_ids
+    out = model.generate(ids, max_new_tokens=40,
+                         pad_token_id=tokenizer.eos_token_id,
+                         do_sample=True, temperature=0.7)
+    print(tokenizer.decode(out[0], skip_special_tokens=True))
+
+ask("What should I have for dinner?")
+ask("How do I make a sandwich?")</div>
+  <div class="infobox">
+    <div class="ilabel">DOES IT SOUND LIKE YOUR CHARACTER?</div>
+    <p>Ask it questions like the ones you trained on, then try brand new ones. A well-trained model answers in your style even for questions you never wrote. That is it generalizing your personality.</p>
+  </div>
+</div>
+
+<div class="slide" id="s12">
+  <div class="stag">Experiment</div>
+  <h2 class="sh2">Make It Better</h2>
+  <div class="abox">
+    <div class="alabel">Try These, One at a Time</div>
+    <p>Go back, change one thing, re-run the training loop and the chat:</p>
+    <ul style="margin-left:1.5rem;margin-top:.5rem;font-size:.86rem;line-height:1.7;">
+      <li>Add more training pairs (aim for 25 or 30) for a stronger personality</li>
+      <li>Train for more epochs (try 50) if the style is not coming through</li>
+      <li>Lower temperature to 0.5 for more consistent answers, raise to 1.0 for wilder ones</li>
+    </ul>
+    <p style="margin-top:.5rem;">Which change helped most? This tuning is exactly what real AI engineers do all day.</p>
+  </div>
+  <div class="warnbox" style="margin-top:.6rem;">
+    <div class="wlabel">RETRAIN AFTER CHANGES</div>
+    <p>If you add pairs, re-run the data cell, the encode cell, and the training loop again in order.</p>
+  </div>
+</div>
+
+<div class="slide" id="s13">
+  <div class="stag">Troubleshooting</div>
+  <h2 class="sh2">Common Problems</h2>
+  <div class="two-col">
+    <div class="card"><div class="ctag">ANSWERS ARE NONSENSE</div><p>Too few pairs or too few epochs. Add more pairs and train longer. GPT-2 small needs repetition to lock in a style.</p></div>
+    <div class="card"><div class="ctag">IT REPEATS ITSELF</div><p>Normal for a small model. Lower max_new_tokens, or add more variety to your training questions.</p></div>
+  </div>
+  <div class="two-col" style="margin-top:.8rem;">
+    <div class="card"><div class="ctag">OUT OF MEMORY</div><p>Restart the runtime, make sure the GPU is on, and keep max_length at 64.</p></div>
+    <div class="card"><div class="ctag">NameError: model</div><p>A cell did not run or Colab reset. Re-run every cell from the top in order.</p></div>
+  </div>
+</div>
+
+<div class="slide" id="s14">
+  <div class="stag">Reflect</div>
+  <h2 class="sh2">What You Just Did</h2>
+  <p style="font-size:.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:1rem;">You took a real language model built by OpenAI and retrained it on data you wrote, producing a custom AI with a personality you designed. That is genuine fine-tuning, the same technique used to build specialized AI assistants in the real world.</p>
+  <div class="infobox">
+    <div class="ilabel">THE FULL JOURNEY</div>
+    <p>No-code AI on Day 1. An image classifier on Day 2. Language models on Day 4. And today, your own trained chatbot. From clicking buttons to training neural networks in five days.</p>
+  </div>
+</div>
+
+<div class="slide" id="s15">
+  <div class="stag">Bonus</div>
+  <span class="bonus-tag">BONUS ROUND // RUN AI ON YOUR OWN MACHINE</span>
+  <h2 class="sh2">Meet Ollama</h2>
+  <p style="font-size:.9rem;color:#cbd5e1;line-height:1.7;margin-bottom:.8rem;">Everything today ran in Colab, on Google's computers. But you can also run powerful AI models entirely on your own laptop, with no internet and no cloud. The tool that makes this easy is called Ollama.</p>
+  <div class="analogy">
+    <div class="alabel2">Why This Is Exciting</div>
+    <p>Colab gave you a borrowed computer. Ollama lets you run real, modern chatbot models, far bigger and smarter than GPT-2 small, right on your own machine, completely private and free. Nothing you type ever leaves your computer.</p>
+  </div>
+</div>
+
+<div class="slide" id="s16">
+  <div class="stag">Bonus</div>
+  <h2 class="sh2">What Ollama Does</h2>
+  <div class="two-col">
+    <div class="card"><div class="ctag">ONE COMMAND TO RUN A MODEL</div><p>Ollama downloads and runs modern open models like Llama and Mistral with a single command. No setup headaches.</p></div>
+    <div class="card"><div class="ctag">FULLY LOCAL AND PRIVATE</div><p>The model runs on your hardware. No account, no internet needed after download, nothing sent to any company.</p></div>
+  </div>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">THE TRADE-OFF</div>
+    <p>Local models are private and free, but they need a reasonably powerful computer, and the biggest models need a lot of memory. Smaller models run on most modern laptops.</p>
+  </div>
+</div>
+
+<div class="slide" id="s17">
+  <div class="stag">Bonus: Setup</div>
+  <h2 class="sh2">Install Ollama</h2>
+  <div class="activity-box">
+    <div class="activity-label">On Your Own Computer</div>
+    <div class="steps"><ol>
+      <li>Go to ollama.com and download the installer for your system</li>
+      <li>Windows and Mac both have a simple click-through installer</li>
+      <li>After installing, open your terminal: Command Prompt on Windows, Terminal on Mac</li>
+      <li>Type ollama and press Enter to confirm it installed</li>
+    </ol></div>
+  </div>
+  <div class="infobox" style="margin-top:.6rem;">
+    <div class="ilabel">DO THIS AT HOME IF NEEDED</div>
+    <p>Installing software may need permissions you do not have on a school computer. If so, this is a great one to try on your own laptop at home.</p>
+  </div>
+</div>
+
+<div class="slide" id="s18">
+  <div class="stag">Bonus: Run It</div>
+  <h2 class="sh2">Chat With a Local Model</h2>
+  <p style="font-size:.86rem;color:var(--muted);margin-bottom:.5rem;">In your terminal, one command downloads a model and starts chatting:</p>
+  <div class="code-box">ollama run llama3.2</div>
+  <div class="out-box">&gt;&gt;&gt; Hello! Who are you?
+I am Llama, an AI assistant running locally on
+your computer. How can I help you today?
+
+&gt;&gt;&gt; (type your message, or /bye to quit)</div>
+  <div class="infobox">
+    <div class="ilabel">WHAT JUST HAPPENED</div>
+    <p>The first run downloads the model, which can take a few minutes. After that it loads instantly and runs entirely on your machine. Type messages and chat. Type /bye to exit. You are running real AI with no cloud at all.</p>
+  </div>
+</div>
+
+<div class="slide" id="s19">
+  <div class="stag">Bonus</div>
+  <h2 class="sh2">Two Ways To Run AI</h2>
+  <div class="two-col">
+    <div class="card"><div class="ctag">CLOUD (COLAB)</div><p>Runs on Google's powerful GPUs. Great for training models like you did today. Needs internet. Free tier has limits.</p></div>
+    <div class="card"><div class="ctag">LOCAL (OLLAMA)</div><p>Runs on your own machine. Private, offline, free. Great for chatting with ready-made models. Limited by your hardware.</p></div>
+  </div>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">PROFESSIONALS USE BOTH</div>
+    <p>Cloud for heavy training, local for private everyday use. Now you have touched both worlds. That is a genuinely advanced place to be after five days.</p>
+  </div>
+</div>
+
+<div class="slide" id="s20">
+  <div class="stag">The Whole Week</div>
+  <h2 class="sh2">Look How Far You Came</h2>
+  <ul class="blist">
+    <li>Day 1: trained your first model by clicking, no code</li>
+    <li>Day 2: built and trained an image classifier in Python</li>
+    <li>Day 4: ran real language models and chatted with AI in code</li>
+    <li>Day 5: fine-tuned your own chatbot and ran AI locally with Ollama</li>
+  </ul>
+  <div class="infobox" style="margin-top:1rem;">
+    <div class="ilabel">YOU ARE NOW SOMEONE WHO BUILDS AI</div>
+    <p>Not just a user of AI, a builder. You understand how it learns, you have trained models yourself, and you know how to run them in the cloud and on your own machine.</p>
+  </div>
+</div>
+
+<div class="slide" id="s21">
+  <div class="stag">Keep Going</div>
+  <h2 class="sh2">Where To Go Next</h2>
+  <ul class="blist">
+    <li>Hugging Face (huggingface.co): thousands of free models to explore and fine-tune</li>
+    <li>Ollama (ollama.com): try bigger local models as your hardware allows</li>
+    <li>Google Colab: keep training. Try fine-tuning on different kinds of data</li>
+    <li>Learn more Python to build full AI apps of your own</li>
+    <li>Fast.ai and Kaggle: free courses and competitions to sharpen your skills</li>
+  </ul>
+  <p style="font-size:.85rem;color:var(--muted);margin-top:1.2rem;">Everything you used this week is free. The only limit now is what you decide to build.</p>
+</div>
+
+<div class="slide" id="s22">
+  <div class="stag">Final Words</div>
+  <h2 class="sh2">You Trained an AI</h2>
+  <p style="font-size:.95rem;color:#e2e8f0;margin-bottom:1rem;">Five days ago, AI was something other people made. Now you have built image classifiers, run language models, fine-tuned a chatbot on your own data, and run AI on your own machine. You understand what is really happening inside these systems, and you can make them do what you want.</p>
+  <div class="abox">
+    <div class="alabel">Carry This Forward</div>
+    <p>The tools are free and the knowledge is yours. Keep experimenting, keep training, and build something the world has not seen yet. You have everything you need to start.</p>
+  </div>
+</div>
+
+</div>
+<div class="nav">
+  <button class="nbtn" id="prev-btn" onclick="changeSlide(-1)" disabled>PREV</button>
+  <div class="pbar"><div class="pfill" id="progress"></div></div>
+  <div class="scnt" id="counter">1 / 22</div>
+  <button class="nbtn" id="next-btn" onclick="changeSlide(1)">NEXT</button>
+</div>
+<script>
+let cur=1;const tot=22;
+function changeSlide(d){
+  document.getElementById('s'+cur).classList.remove('active');
+  cur=Math.min(Math.max(cur+d,1),tot);
+  document.getElementById('s'+cur).classList.add('active');
+  document.getElementById('prev-btn').disabled=cur===1;
+  document.getElementById('next-btn').disabled=cur===tot;
+  document.getElementById('counter').textContent=cur+' / '+tot;
+  document.getElementById('progress').style.width=((cur/tot)*100)+'%';
+  window.scrollTo(0,0);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')changeSlide(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')changeSlide(-1);
+});
+document.getElementById('progress').style.width=((1/tot)*100)+'%';
+</script>
+</body>
+</html>
