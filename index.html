@@ -273,7 +273,9 @@ def chat(question, max_new_tokens=60):
         )
     text = tokenizer.decode(output[0], skip_special_tokens=True)
     answer = text[len(prompt):].strip()
-    answer = answer.split("\nQ:")[0].strip()
+    # Stop at any sign the model is continuing past its answer
+    for stop in ["\nQ:", "\nA:", "\nB:", "Q:", "B:"]:
+        answer = answer.split(stop)[0].strip()
     return answer
 
 print("Chat function ready")</div>
